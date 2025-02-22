@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as THREE from "three";
 
 export const findThreeJSJSON = (data: any): any | null => {
@@ -31,7 +32,7 @@ export const findThreeJSJSON = (data: any): any | null => {
     // The JSON object was not found in this object or any of its children
     return null;
   } catch (e) {
-    console.error("We could not find JSON Object data");
+    console.error("We could not find JSON Object data", e);
   }
 
   return null;
@@ -92,7 +93,7 @@ const parseJSON = async (childrenJSON: any): Promise<THREE.Object3D> => {
       removeTypename(cleanedJSON);
 
       // Parse the JSON data into Three.js objects
-      let parsed = loader.parse(cleanedJSON);
+      const parsed = loader.parse(cleanedJSON);
 
       resolve(parsed);
     } catch (error) {
