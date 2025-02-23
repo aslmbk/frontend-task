@@ -27,7 +27,15 @@ const ViewerComponent: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <div ref={rootRef} style={{ width: "100vw", height: "100vh" }}>
+    <div
+      ref={rootRef}
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <ViewerContext.Provider value={viewerRef.current}>
         {viewer && children}
       </ViewerContext.Provider>
