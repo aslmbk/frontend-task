@@ -17,7 +17,19 @@ class Viewer {
   private world: World;
   public model = new RX.BehaviorSubject<ModelType>(null);
 
+  private cursor: THREE.Mesh;
+
   public status = new RX.BehaviorSubject<ViewerStatus>("idle");
+
+  private originalMaterials = new Map<
+    THREE.Object3D,
+    THREE.Material | THREE.Material[]
+  >();
+  private highlightMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color("#ffff3b"),
+    transparent: true,
+    opacity: 0.8,
+  });
 
   constructor(container: HTMLDivElement) {
     this.id = uuid.v4();
@@ -45,8 +57,18 @@ class Viewer {
       }
     });
 
-    this.world.time.events.on("tick", ({ delta }) => {
+    this.cursor = new THREE.Mesh(
+      new THREE.ConeGeometry(0.2, 0.5, 4),
+      this.highlightMaterial
+    );
+    this.cursor.visible = false;
+    this.cursor.position.set(0, 2, 0);
+    this.cursor.rotateX(-Math.PI);
+    this.world.scene.add(this.cursor);
+
+    this.world.time.events.on("tick", ({ delta, elapsed }) => {
       this.cameraControl.update(delta);
+      this.cursor.position.y += Math.sin(elapsed) * 0.001;
     });
   }
 
@@ -97,6 +119,30 @@ class Viewer {
         };
       }
     });
+  }
+
+  public highlightObject(object: THREE.Object3D) {
+    object.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        this.originalMaterials.set(obj, obj.material);
+        obj.material = this.highlightMaterial;
+      }
+    });
+    const boundingBox = new THREE.Box3().setFromObject(object);
+    const boundingSphere = new THREE.Sphere();
+    boundingBox.getBoundingSphere(boundingSphere);
+    this.cursor.position.x = boundingSphere.center.x;
+    this.cursor.position.z = boundingSphere.center.z;
+    this.cursor.visible = true;
+  }
+
+  public resetObjectHighlight(object: THREE.Object3D) {
+    object.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        obj.material = this.originalMaterials.get(obj);
+      }
+    });
+    this.cursor.visible = false;
   }
 
   public dispose() {

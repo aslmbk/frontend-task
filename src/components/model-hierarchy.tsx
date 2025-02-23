@@ -61,35 +61,15 @@ const ModelHierarchy: React.FC = () => {
   const [selectedObject, setSelectedObject] = useState<THREE.Object3D | null>(
     null
   );
-  const [highlightMaterial] = useState(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: 0xffeb3b,
-        transparent: true,
-        opacity: 0.3,
-      })
-  );
 
   useEffect(() => {
     if (selectedObject) {
-      const originalMaterials = new Map();
-
-      selectedObject.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
-          originalMaterials.set(obj, obj.material);
-          obj.material = highlightMaterial;
-        }
-      });
-
+      viewer.highlightObject(selectedObject);
       return () => {
-        selectedObject.traverse((obj) => {
-          if (obj instanceof THREE.Mesh) {
-            obj.material = originalMaterials.get(obj);
-          }
-        });
+        viewer.resetObjectHighlight(selectedObject);
       };
     }
-  }, [selectedObject, highlightMaterial]);
+  }, [selectedObject, viewer]);
 
   const handleSelect = (object: THREE.Object3D) => {
     if (object.id === selectedObject?.id) {

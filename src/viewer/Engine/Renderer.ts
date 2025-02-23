@@ -52,6 +52,10 @@ export class Renderer {
     this.autoRender = true;
   }
 
+  public getWebGLRenderer() {
+    return this.renderer;
+  }
+
   public getDomElement() {
     return this.renderer.domElement;
   }
