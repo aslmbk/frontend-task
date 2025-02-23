@@ -48,3 +48,45 @@
   margin-right: 8px;
   font-size: 12px;
 }
+
+.legends {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legends__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.legends__item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.legends__color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legends__text {
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.legends__item--selected {
+  background-color: #555555;
+}

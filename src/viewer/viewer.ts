@@ -25,11 +25,7 @@ class Viewer {
     THREE.Object3D,
     THREE.Material | THREE.Material[]
   >();
-  private highlightMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color("#ffff3b"),
-    transparent: true,
-    opacity: 0.8,
-  });
+  private highlightMaterials: Record<string, THREE.MeshBasicMaterial> = {};
 
   constructor(container: HTMLDivElement) {
     this.id = uuid.v4();
@@ -59,7 +55,11 @@ class Viewer {
 
     this.cursor = new THREE.Mesh(
       new THREE.ConeGeometry(0.2, 0.5, 4),
-      this.highlightMaterial
+      new THREE.MeshBasicMaterial({
+        color: 0xffff3b,
+        transparent: true,
+        opacity: 0.5,
+      })
     );
     this.cursor.visible = false;
     this.cursor.position.set(0, 2, 0);
@@ -68,7 +68,7 @@ class Viewer {
 
     this.world.time.events.on("tick", ({ delta, elapsed }) => {
       this.cameraControl.update(delta);
-      this.cursor.position.y += Math.sin(elapsed) * 0.001;
+      this.cursor.position.y += Math.sin(elapsed) * 0.002;
     });
   }
 
@@ -102,17 +102,31 @@ class Viewer {
   }
 
   private assignPropertyValues(object: THREE.Object3D) {
+    const progressStatuses = {
+      1: "Not Started",
+      2: "In Progress",
+      3: "Partially Installed",
+      4: "Installed",
+    };
+    const colors = {
+      1: 0xff4444,
+      2: 0xff9933,
+      3: 0xffeb3b,
+      4: 0x4caf50,
+    };
+    for (const statusCode of Object.keys(progressStatuses)) {
+      const code = parseInt(statusCode) as keyof typeof progressStatuses;
+      this.highlightMaterials[code] = new THREE.MeshBasicMaterial({
+        color: colors[code],
+        transparent: true,
+        opacity: 0.5,
+      });
+    }
     object.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        const progressStatuses = {
-          1: "Not Started",
-          2: "In Progress",
-          3: "Partially Installed",
-          4: "Installed",
-        };
-
         const statusIndex = ((child.id % 4) +
           1) as keyof typeof progressStatuses;
+
         child.userData.propertyValue = {
           statusCode: statusIndex,
           statusText: progressStatuses[statusIndex],
@@ -125,7 +139,8 @@ class Viewer {
     object.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         this.originalMaterials.set(obj, obj.material);
-        obj.material = this.highlightMaterial;
+        obj.material =
+          this.highlightMaterials[obj.userData.propertyValue.statusCode];
       }
     });
     const boundingBox = new THREE.Box3().setFromObject(object);
@@ -139,10 +154,25 @@ class Viewer {
   public resetObjectHighlight(object: THREE.Object3D) {
     object.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
-        obj.material = this.originalMaterials.get(obj);
+        obj.material = this.originalMaterials.get(obj) ?? obj.material;
       }
     });
     this.cursor.visible = false;
+  }
+
+  public highlightObjectByStatus(status: string) {
+    this.model.value?.traverse((obj) => {
+      if (
+        obj instanceof THREE.Mesh &&
+        obj.userData.propertyValue.statusText === status
+      ) {
+        this.originalMaterials.set(obj, obj.material);
+        obj.material =
+          this.highlightMaterials[obj.userData.propertyValue.statusCode];
+      } else {
+        this.resetObjectHighlight(obj);
+      }
+    });
   }
 
   public dispose() {
