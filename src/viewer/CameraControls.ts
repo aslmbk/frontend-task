@@ -26,5 +26,6 @@ export class CameraControls {
 
   public update(delta: number) {
     this.controls.update(delta);
+    this.controls.camera.updateProjectionMatrix();
   }
 }

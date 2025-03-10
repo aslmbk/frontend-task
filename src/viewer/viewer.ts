@@ -6,7 +6,7 @@ import * as RX from "rxjs";
 import { CameraControls } from "./CameraControls";
 import { Lights } from "./Lights";
 import { World } from "./Engine/World";
-
+import { CheckDistance } from "./CheckDistance";
 export type ViewerStatus = "loading" | "error" | "idle";
 export type ModelType = THREE.Object3D | null;
 
@@ -15,6 +15,7 @@ class Viewer {
   private cameraControl: CameraControls;
   private lights: Lights;
   private world: World;
+  private checkDistance: CheckDistance;
   public model = new RX.BehaviorSubject<ModelType>(null);
 
   private cursor: THREE.Mesh;
@@ -39,6 +40,22 @@ class Viewer {
       this.world.view.camera,
       this.world.renderer.getDomElement()
     );
+
+    this.checkDistance = new CheckDistance(
+      this.world.scene.getScene(),
+      this.world.view.camera,
+      this.world.renderer.getDomElement()
+    );
+
+    this.world.debug.panel
+      .addBinding({ active: false }, "active")
+      .on("change", (ev) => {
+        if (ev.value) {
+          this.checkDistance.activate();
+        } else {
+          this.checkDistance.deactivate();
+        }
+      });
 
     this.lights = new Lights(this.world.scene);
 
@@ -69,6 +86,7 @@ class Viewer {
     this.world.time.events.on("tick", ({ delta, elapsed }) => {
       this.cameraControl.update(delta);
       this.cursor.position.y += Math.sin(elapsed) * 0.002;
+      this.checkDistance.update();
     });
   }
 
